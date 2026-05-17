@@ -8,8 +8,8 @@ from ultralytics.utils import SETTINGS
 
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_DATA = ROOT / "ultralytics" / "cfg" / "datasets" / "waterscenes-autodl.yaml"
-DEFAULT_MODEL = ROOT / "ultralytics" / "cfg" / "models" / "v13" / "yolov13n.yaml"
+DEFAULT_DATA = ROOT / "ultralytics" / "cfg" / "datasets" / "waterscenes.yaml"
+DEFAULT_MODEL = ROOT / "ultralytics" / "cfg" / "models" / "v13" / "yolov13s.yaml"
 
 
 def parse_args():
