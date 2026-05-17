@@ -58,15 +58,19 @@ def _get_metric(metrics, *keys):
     return None
 
 
-def _get_mar5095(validator_metrics):
+def _to_numpy(x):
+    return x.cpu().numpy() if hasattr(x, "cpu") else np.asarray(x)
+
+
+def _get_mar5095(validator):
     """Compute mean AR over IoU 0.50:0.95 from the validator's TP matrix."""
-    stats = getattr(validator_metrics, "stats", None)
+    stats = getattr(validator, "stats", None)
     if not stats or not stats.get("tp") or not stats.get("target_cls") or not stats.get("pred_cls"):
         return None
 
-    tp = np.concatenate(stats["tp"], axis=0)
-    target_cls = np.concatenate(stats["target_cls"], axis=0)
-    pred_cls = np.concatenate(stats["pred_cls"], axis=0)
+    tp = np.concatenate([_to_numpy(x) for x in stats["tp"]], axis=0)
+    target_cls = np.concatenate([_to_numpy(x) for x in stats["target_cls"]], axis=0)
+    pred_cls = np.concatenate([_to_numpy(x) for x in stats["pred_cls"]], axis=0)
     if tp.size == 0 or target_cls.size == 0:
         return 0.0
 
@@ -84,7 +88,7 @@ def _get_mar5095(validator_metrics):
 def cache_mar5095_on_val_batch_end(validator):
     """Cache mAR50:95 before Ultralytics clears validator.metrics.stats."""
     if validator.batch_i + 1 == len(validator.dataloader):
-        validator.mar5095 = _get_mar5095(validator.metrics)
+        validator.mar5095 = _get_mar5095(validator)
 
 
 def log_map_metrics_to_wandb(trainer):
@@ -117,7 +121,7 @@ def log_map_metrics_to_wandb(trainer):
     if mar5095 is None:
         mar5095 = getattr(getattr(trainer, "validator", None), "mar5095", None)
     if mar5095 is None:
-        mar5095 = _get_mar5095(validator_metrics)
+        mar5095 = _get_mar5095(getattr(trainer, "validator", None))
     if map75 is not None:
         log_data["mAP75"] = float(map75)
     if mar5095 is not None:
